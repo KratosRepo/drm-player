@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>MPD</title>
+  <title>livestream</title>
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="//content.jwplatform.com/libraries/SAHhwvZq.js"></script>
@@ -38,25 +38,49 @@
     }
 
     // Get parameters from the URL
-    var fileUrl = getParameterByName('url');
+    var fileUrl = getParameterByName('emmbed-url');
+    var kid = getParameterByName('kid');
     var key = getParameterByName('key');
-    var key2 = getParameterByName('key2');
+    
+    // Determine stream type
+    var isMpd = fileUrl.endsWith('.mpd');
+    var isM3U8 = fileUrl.endsWith('.m3u8');
 
     // Set up JWPlayer
-    jwplayer("jwplayerDiv").setup({
+    var playerSetup = {
       file: fileUrl,
       position: 'bottom',
       autostart: true,
       stretching: "",
-      width: "100%",
-      type: fileUrl.endsWith('.m3u8') ? 'hls' : 'dash',
-      drm: {
+      width: "100%"
+    };
+
+    if (isMpd) {
+      // Set up DRM for DASH with keys
+      playerSetup.type = 'dash';
+      playerSetup.drm = {
         clearkey: {
-          keyId: key,
-          key: key2
+          keyId: kid,
+          key: key
         }
+      };
+    } else if (isM3U8) {
+      // Set up DRM for HLS with keys
+      playerSetup.type = 'hls';
+      if (kid && key) {
+        playerSetup.drm = {
+          clearkey: {
+            keyId: kid,
+            key: key
+          }
+        };
       }
-    });
+    } else {
+      // Default to HLS without keys
+      playerSetup.type = 'hls';
+    }
+
+    jwplayer("jwplayerDiv").setup(playerSetup);
   </script>
 </body>
 
