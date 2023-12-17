@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>M3U8 Player</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://content.jwplatform.com/libraries/SAHhwvZq.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: #333;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        #m3u8Form {
+            background-color: #444;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 16px;
+            box-sizing: border-box;
+            border: 1px solid #666;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: #555;
+            color: #fff;
+        }
+
+        input[type="button"] {
+            background-color: #4caf50;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+        }
+
+        .jwplayer {
+            position: absolute !important;
+        }
+
+        .jwplayer.jw-flag-aspect-mode {
+            min-height: 100%;
+            max-height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="jwplayerDiv"></div>
+
+    <!-- Updated form to resemble the style of the DRM video player -->
+    <form id="m3u8Form">
+        <label for="m3u8Link">M3U8 Link:</label>
+        <input type="text" id="m3u8Link" name="m3u8Link" placeholder="Enter M3U8 link" required>
+        <input type="button" value="Play Video" onclick="playM3U8()">
+    </form>
+
+    <script type="text/javascript">
+        function playM3U8() {
+            var m3u8Link = document.getElementById('m3u8Link').value;
+
+            jwplayer("jwplayerDiv").setup({
+                playlist: [{
+                    sources: [{
+                        file: m3u8Link
+                    }]
+                }],
+                position: 'bottom',
+                autostart: true,
+                stretching: "",
+                width: "100%",
+            }).onError(function (error) {
+                console.error("JWPlayer Error:", error);
+            });
+
+            // Hide the form after starting the video
+            var m3u8Form = document.getElementById("m3u8Form");
+            m3u8Form.style.display = "none";
+        }
+    </script>
+</body>
+
+</html>

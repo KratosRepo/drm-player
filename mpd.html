@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>DRM Video Player</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://content.jwplatform.com/libraries/SAHhwvZq.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      background-color: #333;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    #videoForm {
+      background-color: #444;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 16px;
+      box-sizing: border-box;
+      border: 1px solid #666;
+      border-radius: 4px;
+      font-size: 14px;
+      background-color: #555;
+      color: #fff;
+    }
+
+    input[type="button"] {
+      background-color: #4caf50;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+    }
+
+    .jwplayer {
+      position: absolute !important
+    }
+
+    .jwplayer.jw-flag-aspect-mode {
+      min-height: 100%;
+      max-height: 100%
+    }
+  </style>
+</head>
+
+<body>
+  <div id="jwplayerDiv"></div>
+  <form id="videoForm">
+    <label for="manifest">MPD Link:</label>
+    <input type="text" id="manifest" name="manifest" placeholder="Enter MPD link" required>
+
+    <label for="keyId">Key ID:</label>
+    <input type="text" id="keyId" name="keyId" placeholder="Enter Key ID">
+
+    <label for="key">Key:</label>
+    <input type="text" id="key" name="key" placeholder="Enter Key">
+
+    <input type="button" value="Play Video" onclick="playVideo()">
+  </form>
+
+  <script type="text/javascript">
+    function playVideo() {
+      var manifestInput = document.getElementById("manifest");
+      var keyIdInput = document.getElementById("keyId");
+      var keyInput = document.getElementById("key");
+
+      var manifest = manifestInput.value;
+      var keyId = keyIdInput.value;
+      var key = keyInput.value;
+
+      var playerConfig = {
+        file: manifest,
+        autostart: true,
+        stretching: "",
+        width: "100%",
+        type: "dash",
+      };
+
+      if (keyId && key) {
+        // DRM settings only if both keyId and key are provided
+        playerConfig.drm = {
+          clearkey: {
+            keyId: keyId,
+            key: key,
+          },
+        };
+      }
+
+      jwplayer("jwplayerDiv").setup(playerConfig);
+
+      // Hide the form after starting the video
+      var videoForm = document.getElementById("videoForm");
+      videoForm.style.display = "none";
+
+      // Make the JWPlayer fullscreen
+      var jwplayerDiv = document.getElementById("jwplayerDiv");
+      jwplayerDiv.classList.add("jwplayer-fullscreen");
+    }
+  </script>
+
+</body>
+
+</html>

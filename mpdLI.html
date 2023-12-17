@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="referrer" content="no-referrer" />
+    <title>Dynamic Shaka Player</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.6/shaka-player.ui.min.js"
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.6/controls.min.css"
+        crossorigin="anonymous" />
+    <style>
+        body {
+            background-color: #222;
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        #container {
+            text-align: center;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        label {
+            margin: 10px 0;
+        }
+
+        input {
+            padding: 8px;
+            margin: 5px;
+            width: 300px;
+            border: 1px solid #555;
+            border-radius: 5px;
+            background-color: #333;
+            color: #fff;
+        }
+
+        button {
+            padding: 10px;
+            margin-top: 15px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Overflow menu style */
+        .shaka-overflow-menu {
+            background-color: rgb(35, 35, 35);
+            color: rgb(255, 255, 255);
+        }
+
+        .shaka-settings-menu button:hover {
+            background-color: rgb(45, 45, 45);
+        }
+
+        /* Shaka Player video container */
+        #video-container {
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <form id="userInputForm">
+            <label for="manifestUri">MPD Link:</label>
+            <input type="text" id="manifestUri" name="manifestUri" required>
+            <br>
+            <label for="licenseUrl">License URL:</label>
+            <input type="text" id="licenseUrl" name="licenseUrl" required>
+            <br>
+            <button type="button" onclick="loadVideo()">Load Video</button>
+        </form>
+        <div id="video-container" data-shaka-player-container>
+            <video autoplay data-shaka-player id='video'></video>
+        </div>
+    </div>
+    <script>
+        async function loadVideo() {
+            const manifestUri = document.getElementById('manifestUri').value;
+            const licenseUrl = document.getElementById('licenseUrl').value;
+
+            const formContainer = document.getElementById('userInputForm');
+            const videoContainer = document.getElementById('video-container');
+            const video = document.getElementById('video');
+            const ui = video['ui'];
+            const controls = ui.getControls();
+            const player = controls.getPlayer();
+
+            const config = {
+                enableKeyboardPlaybackControls: true,
+                'seekBarColors': {
+                    base: 'rgba(255,255,255,.2)',
+                    buffered: 'rgba(255,255,255,.4)',
+                    played: 'rgb(255,0,0)',
+                },
+            };
+            ui.configure(config);
+
+            player.configure({
+                drm: {
+                    servers: {
+                        'com.widevine.alpha': licenseUrl
+                    },
+                    clearKeys: {},
+                }
+            });
+
+            player.addEventListener('error', onPlayerErrorEvent);
+            controls.addEventListener('error', onUIErrorEvent);
+
+            try {
+                await player.load(manifestUri);
+                formContainer.style.display = 'none'; // Hide the input form
+                videoContainer.style.display = 'block'; // Show the video container
+                console.log('The video has now been loaded!');
+            } catch (error) {
+                onPlayerError(error);
+            }
+        }
+
+        function onPlayerErrorEvent(errorEvent) {
+            onPlayerError(event.detail);
+        }
+
+        function onPlayerError(error) {
+            console.error('Error code', error.code, 'object', error);
+        }
+
+        function onUIErrorEvent(errorEvent) {
+            onPlayerError(event.detail);
+        }
+
+        function initFailed(errorEvent) {
+            console.error('Unable to load the UI library!');
+        }
+
+        document.addEventListener('shaka-ui-loaded', initFailed);
+        document.addEventListener('shaka-ui-load-failed', initFailed);
+    </script>
+</body>
+
+</html>

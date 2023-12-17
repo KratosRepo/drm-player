@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>MPD</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="//content.jwplatform.com/libraries/SAHhwvZq.js"></script>
+  <style>
+    body {
+      margin: 0px
+    }
+
+    .jwplayer {
+      position: absolute !important
+    }
+
+    .jwplayer.jw-flag-aspect-mode {
+      min-height: 100%;
+      max-height: 100%
+    }
+  </style>
+</head>
+
+<body>
+  <div id="jwplayerDiv"></div>
+  <script type="text/javascript">
+    // Function to get URL parameters
+    function getParameterByName(name, url) {
+      if (!url) url = window.location.href;
+      name = name.replace(/[\[\]]/g, "\\$&");
+      var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+      if (!results) return null;
+      if (!results[2]) return '';
+      return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+    // Get parameters from the URL
+    var fileUrl = getParameterByName('url');
+    var key = getParameterByName('key');
+    var key2 = getParameterByName('key2');
+
+    // Set up JWPlayer
+    jwplayer("jwplayerDiv").setup({
+      file: fileUrl,
+      position: 'bottom',
+      autostart: true,
+      stretching: "",
+      width: "100%",
+      type: fileUrl.endsWith('.m3u8') ? 'hls' : 'dash',
+      drm: {
+        clearkey: {
+          keyId: key,
+          key: key2
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>m3u8</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="//content.jwplatform.com/libraries/SAHhwvZq.js"></script>
+  <style>
+    body {
+      margin: 0px
+    }
+
+    .jwplayer {
+      position: absolute !important
+    }
+
+    .jwplayer.jw-flag-aspect-mode {
+      min-height: 100%;
+      max-height: 100%
+    }
+  </style>
+</head>
+
+<body>
+  <div id="jwplayerDiv"></div>
+  <script type="text/javascript">
+      // Set JWPlayer key
+
+      // Function to get URL parameter
+      function getURLParameter(name) {
+          const urlParams = new URLSearchParams(window.location.search);
+          return urlParams.get(name);
+      }
+
+      // Get M3U8 link from URL parameter
+      const m3u8Link = getURLParameter('m3u8');
+
+      // Setup JWPlayer
+      jwplayer("jwplayerDiv").setup({
+          file: m3u8Link || "DEFAULT_M3U8_LINK_IF_NOT_PROVIDED",
+          autostart: true,
+          stretching: "",
+          width: "100%"
+      });
+  </script>
