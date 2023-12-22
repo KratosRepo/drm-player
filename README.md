@@ -5,11 +5,12 @@ Welcome to the DRM DASH / HLS Player – a feature-rich media player that suppor
 ## DRM DASH LICENSE
 
 Check out the [DRM DASH LICENSE](https://kratosrepo.github.io//drm-player/mpdLI) to witness seamless playback of mpd content with a global license URL.
+![DRM Player Screenshot](screenshot.png)
 
 ## DRM HLS/ DASH Embed player
 
 Integrate the player into your projects using the [DRM HLS/ DASH Embed player](https://kratosrepo.github.io/drm-player/?emmbed-url=) feature.
-![DRM Player Screenshot](screenshot.png)
+
 
 ### Examples:
 
