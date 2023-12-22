@@ -76,9 +76,9 @@
   <div id="jwplayerDiv"></div>
   <form id="videoForm">
     <div id="announcement">DASH and HLS with key and without also</div>
-    <div id="announcement">For without key ingnore kid and key just add stream url and click on play</div>
+    <div id="announcement">For without key, ignore kid and key, just add stream URL and click on play</div>
     <label for="manifest">Stream Link:</label>
-    <input type="text" id="manifest" name="manifest" placeholder="Enter Stream link(mpd or m3u8)"" required>
+    <input type="text" id="manifest" name="manifest" placeholder="Enter Stream link(mpd or m3u8)" required>
 
     <label for="keyId">Key ID:</label>
     <input type="text" id="keyId" name="keyId" placeholder="Enter Key ID">
@@ -91,13 +91,15 @@
 
   <script type="text/javascript">
     // Check if JWPlayer is loaded
-    function waitForJWPlayer() {
+    function waitForJWPlayer(callback) {
       if (typeof jwplayer === 'function') {
-        // JWPlayer is loaded, proceed with setup
-        setupVideoPlayer();
+        // JWPlayer is loaded, execute callback
+        callback();
       } else {
         // JWPlayer not yet loaded, wait and check again
-        setTimeout(waitForJWPlayer, 100);
+        setTimeout(function () {
+          waitForJWPlayer(callback);
+        }, 100);
       }
     }
 
@@ -110,8 +112,10 @@
       var jwplayerDiv = document.getElementById("jwplayerDiv");
       jwplayerDiv.classList.add("jwplayer-fullscreen");
 
-      // Wait for JWPlayer to be fully loaded
-      waitForJWPlayer();
+      // Wait for JWPlayer to be fully loaded and then set up the video player
+      waitForJWPlayer(function () {
+        setupVideoPlayer();
+      });
     }
 
     function setupVideoPlayer() {
@@ -143,6 +147,62 @@
 
       jwplayer("jwplayerDiv").setup(playerConfig);
     }
+
+    // Function to get URL parameters
+    function getParameterByName(name, url) {
+      if (!url) url = window.location.href;
+      name = name.replace(/[\[\]]/g, "\\$&");
+      var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+      if (!results) return null;
+      if (!results[2]) return '';
+      return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+    // Get parameters from the URL
+    var fileUrl = getParameterByName('emmbed-url');
+    var kid = getParameterByName('kid');
+    var key = getParameterByName('key');
+
+    // Determine stream type
+    var isMpd = fileUrl.endsWith('.mpd');
+    var isM3U8 = fileUrl.endsWith('.m3u8');
+
+    // Set up JWPlayer
+    var playerSetup = {
+      file: fileUrl,
+      position: 'bottom',
+      autostart: true,
+      stretching: "",
+      width: "100%"
+    };
+
+    if (isMpd) {
+      // Set up DRM for DASH with keys
+      playerSetup.type = 'dash';
+      playerSetup.drm = {
+        clearkey: {
+          keyId: kid,
+          key: key
+        }
+      };
+    } else if (isM3U8) {
+      // Set up DRM for HLS with keys
+      playerSetup.type = 'hls';
+      if (kid && key) {
+        playerSetup.drm = {
+          clearkey: {
+            keyId: kid,
+            key: key
+          }
+        };
+      }
+    } else {
+      // Default to HLS without keys
+      playerSetup.type = 'hls';
+    }
+
+    jwplayer("jwplayerDiv").setup(playerSetup);
   </script>
 </body>
 
