@@ -9,7 +9,7 @@ Check out the [DRM DASH LICENSE](https://kratosrepo.github.io//drm-player/mpdLI)
 ## DRM HLS/ DASH Embed player
 
 Integrate the player into your projects using the [DRM HLS/ DASH Embed player](https://kratosrepo.github.io/drm-player/?emmbed-url=) feature.
-![DRM Player Screenshot](screen shot.png)
+![DRM Player Screenshot](screenshot.png)
 
 ### Examples:
 
@@ -33,4 +33,4 @@ Securely play a DASH stream with a manifest link and key:
 Enjoy the simplicity of playback with a DASH/HLS stream without the need for a key:
 [Demo Link](https://kratosrepo.github.io/drm-player/?emmbed-url=https://cdn.bitmovin.com/content/assets/art-of-motion-dash-hls-progressive/mpds/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.mpd)
 
-Feel free to explore and integrate this player into your projects. For any questions or improvements, reach out to us. The temporary examples are just for illustration purposes; replace them with your actual links for production use.
+Feel free to explore and integrate this player into your projects. For any questions or improvements, reach out to us. The temporary examples are just for illustration purposes; replace them with your actual links and images for production use.
