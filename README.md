@@ -1,12 +1,13 @@
 # DRM DASH / HLS Player
 
 Welcome to the DRM DASH / HLS Player – a feature-rich media player that supports various streaming formats such as m3u8, mpd, m3u8+key, and mpd+key. Explore its capabilities through the [DRM DASH / HLS Player](https://kratosrepo.github.io/drm-player/).
+![DRM DASH / HLS Player Screenshot](screenshot.png)
+
 
 ## DRM DASH LICENSE
 
 Check out the [DRM DASH LICENSE](https://kratosrepo.github.io//drm-player/mpdLI) to witness seamless playback of mpd content with a global license URL.
-![DRM Player Screenshot](screenshot.png)
-
+![DRM DASH LICENSE Screenshot](screenshot2.png)
 ## DRM HLS/ DASH Embed player
 
 Integrate the player into your projects using the [DRM HLS/ DASH Embed player](https://kratosrepo.github.io/drm-player/?emmbed-url=) feature.
