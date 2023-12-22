@@ -9,7 +9,7 @@ Check out the [DRM DASH LICENSE](https://kratosrepo.github.io//drm-player/mpdLI)
 ## DRM HLS/ DASH Embed player
 
 Integrate the player into your projects using the [DRM HLS/ DASH Embed player](https://kratosrepo.github.io/drm-player/?emmbed-url=) feature.
-![DRM Player Screenshot](screen shot.png)
+![DRM Player Screenshot]([screen shot.png](https://github.com/KratosRepo/drm-player/blob/a7e1197bee9259c6159fb2aa3a78b283907dd2ac/screen%20shot.png))
 
 ### Examples:
 
