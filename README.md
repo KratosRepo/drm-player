@@ -42,7 +42,5 @@ Feel free to explore and integrate this player into your projects. For any quest
 
 
 # Acknowledgments
-
-- [JW Player](https://github.com/jwplayer/jwplayer): A powerful video player for the web.
-- Special thanks to the contributors of JW Player for their amazing video player library.
+- Special thanks to the contributors of [JW Player](https://github.com/jwplayer/jwplayer) for their amazing video player library and video player for the web.
 
