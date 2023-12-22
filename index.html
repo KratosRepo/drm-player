@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Video Player</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://content.jwplatform.com/libraries/SAHhwvZq.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      background-color: #333;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    #videoForm {
+      background-color: #444;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    #announcement {
+      margin-bottom: 16px;
+      color: #ffcc00;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 16px;
+      box-sizing: border-box;
+      border: 1px solid #666;
+      border-radius: 4px;
+      font-size: 14px;
+      background-color: #555;
+      color: #fff;
+    }
+
+    input[type="button"] {
+      background-color: #4caf50;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+    }
+
+    .jwplayer {
+      position: absolute !important
+    }
+
+    .jwplayer.jw-flag-aspect-mode {
+      min-height: 100%;
+      max-height: 100%
+    }
+  </style>
+</head>
+
+<body>
+  <div id="jwplayerDiv"></div>
+  <form id="videoForm">
+    <div id="announcement">DASH and HLS with key and without also</div>
+    <div id="announcement">For without key, ignore kid and key, just add stream URL and click on play</div>
+    <label for="manifest">Stream Link:</label>
+    <input type="text" id="manifest" name="manifest" placeholder="Enter Stream link(mpd or m3u8)" required>
+
+    <label for="keyId">Key ID:</label>
+    <input type="text" id="keyId" name="keyId" placeholder="Enter Key ID">
+
+    <label for="key">Key:</label>
+    <input type="text" id="key" name="key" placeholder="Enter Key">
+
+    <input type="button" value="Play Video" onclick="playVideo()">
+  </form>
+
+  <script type="text/javascript">
+    // Check if JWPlayer is loaded
+    function waitForJWPlayer(callback) {
+      if (typeof jwplayer === 'function') {
+        // JWPlayer is loaded, execute callback
+        callback();
+      } else {
+        // JWPlayer not yet loaded, wait and check again
+        setTimeout(function () {
+          waitForJWPlayer(callback);
+        }, 100);
+      }
+    }
+
+    function playVideo() {
+      // Hide the form after starting the video
+      var videoForm = document.getElementById("videoForm");
+      videoForm.style.display = "none";
+
+      // Make the JWPlayer fullscreen
+      var jwplayerDiv = document.getElementById("jwplayerDiv");
+      jwplayerDiv.classList.add("jwplayer-fullscreen");
+
+      // Wait for JWPlayer to be fully loaded and then set up the video player
+      waitForJWPlayer(function () {
+        setupVideoPlayer();
+      });
+    }
+
+    function setupVideoPlayer() {
+      var manifestInput = document.getElementById("manifest");
+      var keyIdInput = document.getElementById("keyId");
+      var keyInput = document.getElementById("key");
+
+      var manifest = manifestInput.value;
+      var keyId = keyIdInput.value;
+      var key = keyInput.value;
+
+      var playerConfig = {
+        file: manifest,
+        autostart: true,
+        stretching: "",
+        width: "100%",
+        type: "dash",
+      };
+
+      if (keyId && key) {
+        // DRM settings only if both keyId and key are provided
+        playerConfig.drm = {
+          clearkey: {
+            keyId: keyId,
+            key: key,
+          },
+        };
+      }
+
+      jwplayer("jwplayerDiv").setup(playerConfig);
+    }
+
+    // Function to get URL parameters
+    function getParameterByName(name, url) {
+      if (!url) url = window.location.href;
+      name = name.replace(/[\[\]]/g, "\\$&");
+      var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+      if (!results) return null;
+      if (!results[2]) return '';
+      return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+    // Get parameters from the URL
+    var fileUrl = getParameterByName('emmbed-url');
+    var kid = getParameterByName('kid');
+    var key = getParameterByName('key');
+
+    // Determine stream type
+    var isMpd = fileUrl.endsWith('.mpd');
+    var isM3U8 = fileUrl.endsWith('.m3u8');
+
+    // Set up JWPlayer
+    var playerSetup = {
+      file: fileUrl,
+      position: 'bottom',
+      autostart: true,
+      stretching: "",
+      width: "100%"
+    };
+
+    if (isMpd) {
+      // Set up DRM for DASH with keys
+      playerSetup.type = 'dash';
+      playerSetup.drm = {
+        clearkey: {
+          keyId: kid,
+          key: key
+        }
+      };
+    } else if (isM3U8) {
+      // Set up DRM for HLS with keys
+      playerSetup.type = 'hls';
+      if (kid && key) {
+        playerSetup.drm = {
+          clearkey: {
+            keyId: kid,
+            key: key
+          }
+        };
+      }
+    } else {
+      // Default to HLS without keys
+      playerSetup.type = 'hls';
+    }
+
+    jwplayer("jwplayerDiv").setup(playerSetup);
+  </script>
+</body>
+
+</html>
