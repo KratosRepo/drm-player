@@ -1,5 +1,10 @@
 # DRM DASH / HLS Player
 
+## Acknowledgments
+
+- [JW Player](https://github.com/jwplayer/jwplayer): A powerful video player for the web.
+- Special thanks to the contributors of JW Player for their amazing video player library.
+
 Welcome to the DRM DASH / HLS Player – a versatile media player supporting various streaming formats such as m3u8, mpd, m3u8+key, and mpd+key. Explore its features and capabilities through the [DRM DASH / HLS Player Demo](https://kratosrepo.github.io/drm-player/).
 
 ![DRM DASH / HLS Player Screenshot](screenshot.png)
