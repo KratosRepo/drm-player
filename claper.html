@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>KRAtos</title>
+  <link rel="stylesheet" type="text/css" href="/clapp.css">
+  <script src="//cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
+  <script type="text/javascript" src="//cdn.jsdelivr.net/gh/clappr/clappr-level-selector-plugin@latest/dist/level-selector.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@clappr/hlsjs-playback@1.2.0/dist/hlsjs-playback.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@c3voc/clappr-audio-track-selector@0.2.4/dist/audio-track-selector.min.js"></script>
+  <style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    #player {
+      height: 100%;
+      width: 100%;
+    }
+    #playButton {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <input type="text" id="videoUrl" placeholder="Enter video URL">
+  <button id="playButton" onclick="playVideo()">Play</button>
+  <div id="player"></div>
+  <script>
+    var playClicked = false;
+
+    function playVideo() {
+      if (playClicked) return;
+
+      var videoUrl = document.getElementById("videoUrl").value;
+      if (!videoUrl) {
+        alert("Please enter a valid video URL");
+        return;
+      }
+
+      var player = new Clappr.Player({
+        source: videoUrl,
+        plugins: [HlsjsPlayback, LevelSelector, AudioTrackSelector],
+        width: '100%',
+        height: '100%',
+        autoPlay: true,
+        mimeType: "application/x-mpegURL",
+        mediacontrol: { seekbar: "#ff0000", buttons: "#eee" },
+        parentId: "#player",
+        hlsUseNextLevel: false,
+        hlsMinimumDvrSize: 60,
+        hlsRecoverAttempts: 16,
+        hlsPlayback: {
+          preload: true,
+          customListeners: [],
+        },
+        playback: {
+          extrapolatedWindowNumSegments: 2,
+          triggerFatalErrorOnResourceDenied: false,
+          hlsjsConfig: {
+            // hls.js specific options
+          },
+        },
+      });
+
+      // Hide the play button once the video starts playing
+      document.getElementById("playButton").style.display = "none";
+      playClicked = true;
+    }
+  </script>
+</body>
+</html>
