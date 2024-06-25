@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <title>Video Player</title>
@@ -50,7 +49,7 @@
       color: #fff;
     }
 
-    input[type="submit"] {
+    input[type="button"] {
       background-color: #4caf50;
       color: white;
       cursor: pointer;
@@ -62,21 +61,21 @@
     }
 
     .jwplayer {
-      position: absolute !important
+      position: absolute !important;
     }
 
     .jwplayer.jw-flag-aspect-mode {
       min-height: 100%;
-      max-height: 100%
+      max-height: 100%;
     }
   </style>
 </head>
 
 <body>
   <div id="jwplayerDiv"></div>
-  <form id="videoForm" action="save_input.php" method="POST">
-    <div id="announcement">DASH and HLS with key and without also</div>
-    <div id="announcement">For without key, ignore kid and key, just add stream URL and click on play</div>
+  <form id="videoForm" aria-labelledby="formTitle">
+    <div id="announcement" role="alert">DASH and HLS with key and without also</div>
+    <div id="announcement" role="alert">For without key, ignore kid and key, just add stream URL and click on play</div>
     <label for="manifest">Stream Link:</label>
     <input type="text" id="manifest" name="manifest" placeholder="Enter Stream link(mpd or m3u8)" required>
 
@@ -86,38 +85,39 @@
     <label for="key">Key:</label>
     <input type="text" id="key" name="key" placeholder="Enter Key">
 
-    <input type="submit" value="Play Video">
+    <input type="button" value="Play Video" onclick="playVideo()">
   </form>
 
   <script type="text/javascript">
-    document.getElementById('videoForm').addEventListener('submit', function(event) {
-      event.preventDefault();
+    function waitForJWPlayer(callback) {
+      if (typeof jwplayer === 'function') {
+        callback();
+      } else {
+        setTimeout(() => waitForJWPlayer(callback), 100);
+      }
+    }
 
-      var formData = new FormData(this);
+    function playVideo() {
+      const videoForm = document.getElementById("videoForm");
+      videoForm.style.display = "none";
 
-      fetch('https://bigcric.site/whynot/save_input.php', {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          setupVideoPlayer(data.manifest, data.keyId, data.key);
-        } else {
-          alert('Error saving input');
-        }
-      })
-      .catch(error => console.error('Error:', error));
-    });
+      const jwplayerDiv = document.getElementById("jwplayerDiv");
+      jwplayerDiv.classList.add("jwplayer-fullscreen");
 
-    function setupVideoPlayer(manifest, keyId, key) {
-      document.getElementById('videoForm').style.display = 'none';
-      var playerConfig = {
+      waitForJWPlayer(setupVideoPlayer);
+    }
+
+    function setupVideoPlayer() {
+      const manifest = document.getElementById("manifest").value;
+      const keyId = document.getElementById("keyId").value;
+      const key = document.getElementById("key").value;
+
+      const playerConfig = {
         file: manifest,
         autostart: true,
-        stretching: "",
+        stretching: "exactfit",
         width: "100%",
-        type: manifest.endsWith('.mpd') ? 'dash' : 'hls',
+        type: manifest.endsWith('.mpd') ? "dash" : "hls",
       };
 
       if (keyId && key) {
@@ -132,26 +132,40 @@
       jwplayer("jwplayerDiv").setup(playerConfig);
     }
 
-    // Function to get URL parameters
-    function getParameterByName(name, url) {
-      if (!url) url = window.location.href;
+    function getParameterByName(name, url = window.location.href) {
       name = name.replace(/[\[\]]/g, "\\$&");
-      var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+      const regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
         results = regex.exec(url);
       if (!results) return null;
       if (!results[2]) return '';
       return decodeURIComponent(results[2].replace(/\+/g, " "));
     }
 
-    // Get parameters from the URL
-    var fileUrl = getParameterByName('embed-url');
-    var kid = getParameterByName('kid');
-    var key = getParameterByName('key');
+    document.addEventListener('DOMContentLoaded', () => {
+      const fileUrl = getParameterByName('emmbed-url');
+      const kid = getParameterByName('kid');
+      const key = getParameterByName('key');
 
-    if (fileUrl) {
-      setupVideoPlayer(fileUrl, kid, key);
-    }
+      const playerSetup = {
+        file: fileUrl,
+        position: 'bottom',
+        autostart: true,
+        stretching: "exactfit",
+        width: "100%",
+        type: fileUrl.endsWith('.mpd') ? 'dash' : 'hls'
+      };
+
+      if (kid && key) {
+        playerSetup.drm = {
+          clearkey: {
+            keyId: kid,
+            key: key
+          }
+        };
+      }
+
+      jwplayer("jwplayerDiv").setup(playerSetup);
+    });
   </script>
 </body>
-
 </html>
