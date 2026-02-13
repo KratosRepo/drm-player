@@ -3,208 +3,179 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>DRM Player — DASH &amp; HLS</title>
+  <title>DRM Player</title>
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Play DRM-protected DASH and HLS streams with ClearKey support">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>▶</text></svg>">
   <script src="https://content.jwplatform.com/libraries/SAHhwvZq.js"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
+      margin: 0;
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-      color: #e0e0e0;
-      min-height: 100vh;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
+      height: 100vh;
     }
 
-    /* ── Player container ── */
-    #jwplayerDiv {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 10;
-      background: #000;
-    }
-
-    /* ── Form card ── */
     #videoForm {
-      background: rgba(255, 255, 255, 0.06);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 32px 28px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 36px 30px 28px;
       border-radius: 16px;
-      width: 100%;
-      max-width: 440px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      transition: opacity 0.4s ease, transform 0.4s ease;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      text-align: center;
+      width: 420px;
+      max-width: 92vw;
     }
 
-    #videoForm.hidden {
-      opacity: 0;
-      transform: scale(0.95);
-      pointer-events: none;
-    }
-
+    .form-header { margin-bottom: 22px; }
     .form-title {
-      font-size: 1.5rem;
+      font-size: 1.6rem;
       font-weight: 700;
-      text-align: center;
-      margin-bottom: 4px;
-      background: linear-gradient(90deg, #e94560, #533483);
+      margin-bottom: 6px;
+      background: linear-gradient(135deg, #e94560, #a855f7);
       -webkit-background-clip: text;
-      background-clip: text;
       -webkit-text-fill-color: transparent;
-      color: transparent;
     }
-
     .form-subtitle {
-      text-align: center;
-      font-size: 0.85rem;
-      color: #999;
-      margin-bottom: 24px;
+      font-size: 0.82rem;
+      color: #888;
+      line-height: 1.4;
     }
 
-    .badge-row {
+    .badges {
       display: flex;
       gap: 6px;
       justify-content: center;
-      margin-bottom: 20px;
+      margin-bottom: 22px;
     }
-
     .badge {
-      font-size: 0.7rem;
-      padding: 3px 10px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 4px 12px;
       border-radius: 20px;
-      font-weight: 600;
       letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
-    .badge.dash { background: #e94560; color: #fff; }
-    .badge.hls  { background: #533483; color: #fff; }
-    .badge.drm  { background: #0f3460; color: #7ec8e3; border: 1px solid #7ec8e3; }
+    .badge-dash { background: #e94560; }
+    .badge-hls { background: #7c3aed; }
+    .badge-drm { background: transparent; border: 1px solid #60a5fa; color: #60a5fa; }
+
+    .field { text-align: left; margin-bottom: 16px; }
+    .field:last-of-type { margin-bottom: 20px; }
 
     label {
       display: block;
-      font-size: 0.8rem;
+      font-size: 0.72rem;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: #aaa;
+      letter-spacing: 1px;
+      color: #999;
       margin-bottom: 6px;
     }
+    .optional { color: #555; font-weight: 400; text-transform: none; letter-spacing: 0; }
 
-    input[type="text"] {
+    input {
       width: 100%;
-      padding: 12px 14px;
-      margin-bottom: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 11px 14px;
+      box-sizing: border-box;
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 8px;
-      font-size: 0.9rem;
-      background: rgba(0, 0, 0, 0.25);
+      font-size: 0.88rem;
+      background: rgba(0, 0, 0, 0.3);
       color: #fff;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-    input[type="text"]:focus {
+    input:focus {
       outline: none;
-      border-color: #e94560;
+      border-color: #a855f7;
+      box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
     }
-    input[type="text"]::placeholder { color: #666; }
+    input::placeholder { color: #555; }
 
-    .optional-hint {
-      font-size: 0.72rem;
-      color: #666;
-      margin-top: -12px;
-      margin-bottom: 14px;
-    }
-
-    .btn-play {
-      width: 100%;
-      padding: 14px;
+    input[type="button"] {
+      background: linear-gradient(135deg, #e94560, #a855f7);
+      color: white;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 13px 20px;
       border: none;
       border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      background: linear-gradient(135deg, #e94560, #533483);
-      color: #fff;
-      letter-spacing: 0.5px;
-      transition: transform 0.15s, box-shadow 0.2s;
+      letter-spacing: 0.3px;
+      transition: transform 0.12s, box-shadow 0.2s;
+      margin-top: 4px;
     }
-    .btn-play:hover {
+    input[type="button"]:hover {
       transform: translateY(-1px);
-      box-shadow: 0 4px 20px rgba(233, 69, 96, 0.4);
+      box-shadow: 0 6px 24px rgba(233, 69, 96, 0.35);
     }
-    .btn-play:active { transform: translateY(0); }
+    input[type="button"]:active { transform: translateY(0); }
 
-    .error-msg {
-      display: none;
-      color: #ff6b6b;
-      font-size: 0.82rem;
-      text-align: center;
-      margin-top: 12px;
-      padding: 8px;
-      background: rgba(255, 107, 107, 0.1);
-      border-radius: 6px;
-    }
-
-    /* ── Nav links ── */
     .nav-links {
       display: flex;
       justify-content: center;
-      gap: 12px;
+      gap: 10px;
       margin-top: 20px;
       flex-wrap: wrap;
     }
     .nav-links a {
-      font-size: 0.75rem;
-      color: #7ec8e3;
+      font-size: 0.72rem;
+      color: #60a5fa;
       text-decoration: none;
-      padding: 4px 10px;
-      border: 1px solid rgba(126, 200, 227, 0.3);
+      padding: 4px 12px;
+      border: 1px solid rgba(96, 165, 250, 0.2);
       border-radius: 20px;
       transition: background 0.2s;
     }
-    .nav-links a:hover {
-      background: rgba(126, 200, 227, 0.1);
+    .nav-links a:hover { background: rgba(96, 165, 250, 0.1); }
+
+    .jwplayer {
+      position: absolute !important
+    }
+
+    .jwplayer.jw-flag-aspect-mode {
+      min-height: 100%;
+      max-height: 100%
     }
   </style>
 </head>
 
 <body>
   <div id="jwplayerDiv"></div>
-
-  <form id="videoForm" onsubmit="return false;">
-    <div class="form-title">DRM Player</div>
-    <div class="form-subtitle">DASH &amp; HLS Streaming with ClearKey DRM</div>
-
-    <div class="badge-row">
-      <span class="badge dash">DASH / MPD</span>
-      <span class="badge hls">HLS / M3U8</span>
-      <span class="badge drm">ClearKey DRM</span>
+  <form id="videoForm">
+    <div class="form-header">
+      <div class="form-title">DRM Player</div>
+      <div class="form-subtitle">Play DASH &amp; HLS streams with optional ClearKey DRM</div>
     </div>
 
-    <label for="manifest">Stream URL</label>
-    <input type="text" id="manifest" placeholder="https://example.com/stream.mpd or .m3u8" required autofocus>
+    <div class="badges">
+      <span class="badge badge-dash">DASH</span>
+      <span class="badge badge-hls">HLS</span>
+      <span class="badge badge-drm">ClearKey</span>
+    </div>
 
-    <label for="keyId">Key ID</label>
-    <input type="text" id="keyId" placeholder="e.g. 0cbc4d3b4fbd9af512acb2488bb42910">
-    <div class="optional-hint">Optional — leave empty for non-DRM streams</div>
+    <div class="field">
+      <label for="manifest">Stream URL</label>
+      <input type="text" id="manifest" name="manifest" placeholder="https://example.com/stream.mpd or .m3u8" required>
+    </div>
 
-    <label for="key">Key</label>
-    <input type="text" id="key" placeholder="e.g. 30528c4ef882954e5707cd1001d66121">
-    <div class="optional-hint">Optional — leave empty for non-DRM streams</div>
+    <div class="field">
+      <label for="keyId">Key ID <span class="optional">(optional)</span></label>
+      <input type="text" id="keyId" name="keyId" placeholder="hex key id — leave empty for non-DRM">
+    </div>
 
-    <button type="button" class="btn-play" onclick="playVideo()">&#9654;&ensp;Play Video</button>
+    <div class="field">
+      <label for="key">Key <span class="optional">(optional)</span></label>
+      <input type="text" id="key" name="key" placeholder="hex key — leave empty for non-DRM">
+    </div>
 
-    <div id="errorMsg" class="error-msg"></div>
+    <input type="button" value="&#9654;  Play Video" onclick="playVideo()">
 
     <div class="nav-links">
       <a href="mpdLI.html">Widevine Player</a>
@@ -213,123 +184,115 @@
     </div>
   </form>
 
-  <script>
-    'use strict';
-
-    /* ── Utilities ── */
-    function getParam(name) {
-      const url = new URL(window.location.href);
-      return url.searchParams.get(name) || '';
+  <script type="text/javascript">
+    // Check if JWPlayer is loaded
+    function waitForJWPlayer(callback) {
+      if (typeof jwplayer === 'function') {
+        callback();
+      } else {
+        setTimeout(function () {
+          waitForJWPlayer(callback);
+        }, 100);
+      }
     }
 
-    function showError(msg) {
-      const el = document.getElementById('errorMsg');
-      el.textContent = msg;
-      el.style.display = 'block';
-      setTimeout(() => { el.style.display = 'none'; }, 5000);
-    }
+    function playVideo() {
+      var videoForm = document.getElementById("videoForm");
+      videoForm.style.display = "none";
 
-    function hideForm() {
-      const form = document.getElementById('videoForm');
-      form.classList.add('hidden');
-      setTimeout(() => { form.style.display = 'none'; }, 400);
-      document.getElementById('jwplayerDiv').style.display = 'block';
-    }
+      var jwplayerDiv = document.getElementById("jwplayerDiv");
+      jwplayerDiv.classList.add("jwplayer-fullscreen");
 
-    /* ── Wait for JWPlayer library ── */
-    function waitForJWPlayer(timeout = 10000) {
-      return new Promise((resolve, reject) => {
-        const start = Date.now();
-        (function check() {
-          if (typeof jwplayer === 'function') return resolve();
-          if (Date.now() - start > timeout) return reject(new Error('JWPlayer failed to load'));
-          setTimeout(check, 100);
-        })();
+      waitForJWPlayer(function () {
+        setupVideoPlayer();
       });
     }
 
-    /* ── Detect stream type from URL (handles query strings) ── */
-    function getStreamType(url) {
-      try {
-        const pathname = new URL(url).pathname.toLowerCase();
-        if (pathname.endsWith('.mpd')) return 'dash';
-        return 'hls';
-      } catch {
-        // Fallback for relative or malformed URLs
-        const clean = url.split('?')[0].split('#')[0].toLowerCase();
-        if (clean.endsWith('.mpd')) return 'dash';
-        return 'hls';
-      }
-    }
+    function setupVideoPlayer() {
+      var manifestInput = document.getElementById("manifest");
+      var keyIdInput = document.getElementById("keyId");
+      var keyInput = document.getElementById("key");
 
-    /* ── Build player config ── */
-    function buildConfig(manifest, keyId, key) {
-      const config = {
+      var manifest = manifestInput.value;
+      var keyId = keyIdInput.value;
+      var key = keyInput.value;
+
+      var playerConfig = {
         file: manifest,
         autostart: true,
-        width: '100%',
-        height: '100%',
-        stretching: 'uniform',
-        type: getStreamType(manifest),
+        stretching: "",
+        width: "100%",
+        type: "dash",
       };
 
       if (keyId && key) {
-        config.drm = { clearkey: { keyId, key } };
+        playerConfig.drm = {
+          clearkey: {
+            keyId: keyId,
+            key: key,
+          },
+        };
       }
 
-      return config;
+      jwplayer("jwplayerDiv").setup(playerConfig);
     }
 
-    /* ── Play from form ── */
-    async function playVideo() {
-      const manifest = document.getElementById('manifest').value.trim();
-      const keyId    = document.getElementById('keyId').value.trim();
-      const key      = document.getElementById('key').value.trim();
-
-      if (!manifest) return showError('Please enter a stream URL');
-
-      try {
-        await waitForJWPlayer();
-      } catch {
-        return showError('JWPlayer library failed to load. Check your connection.');
-      }
-
-      hideForm();
-      // Wait for browser to layout the visible div before JWPlayer measures it
-      await new Promise(r => requestAnimationFrame(r));
-      const player = jwplayer('jwplayerDiv').setup(buildConfig(manifest, keyId, key));
-      player.on('error', (e) => showError('Playback error: ' + (e.message || 'Unknown error')));
-      player.on('setupError', (e) => showError('Setup error: ' + (e.message || 'Could not initialize player')));
+    // Function to get URL parameters
+    function getParameterByName(name, url) {
+      if (!url) url = window.location.href;
+      name = name.replace(/[\[\]]/g, "\\$&");
+      var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+      if (!results) return null;
+      if (!results[2]) return '';
+      return decodeURIComponent(results[2].replace(/\+/g, " "));
     }
 
-    /* ── Enter key support ── */
-    document.getElementById('videoForm').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        playVideo();
+    // Get parameters from the URL
+    var fileUrl = getParameterByName('emmbed-url');
+    var kid = getParameterByName('kid');
+    var key = getParameterByName('key');
+
+    // Determine stream type
+    var isMpd = fileUrl && fileUrl.endsWith('.mpd');
+    var isM3U8 = fileUrl && fileUrl.endsWith('.m3u8');
+
+    if (fileUrl) {
+      // Hide form and play from URL params
+      document.getElementById("videoForm").style.display = "none";
+
+      var playerSetup = {
+        file: fileUrl,
+        position: 'bottom',
+        autostart: true,
+        stretching: "",
+        width: "100%"
+      };
+
+      if (isMpd) {
+        playerSetup.type = 'dash';
+        playerSetup.drm = {
+          clearkey: {
+            keyId: kid,
+            key: key
+          }
+        };
+      } else if (isM3U8) {
+        playerSetup.type = 'hls';
+        if (kid && key) {
+          playerSetup.drm = {
+            clearkey: {
+              keyId: kid,
+              key: key
+            }
+          };
+        }
+      } else {
+        playerSetup.type = 'hls';
       }
-    });
 
-    /* ── Auto-play from URL params ── */
-    (async function autoPlay() {
-      const fileUrl = getParam('emmbed-url') || getParam('embed-url');
-      if (!fileUrl) return;
-
-      const kid = getParam('kid');
-      const key = getParam('key');
-
-      try {
-        await waitForJWPlayer();
-      } catch {
-        return showError('JWPlayer library failed to load.');
-      }
-
-      hideForm();
-      await new Promise(r => requestAnimationFrame(r));
-      const player = jwplayer('jwplayerDiv').setup(buildConfig(fileUrl, kid, key));
-      player.on('error', (e) => showError('Playback error: ' + (e.message || 'Unknown error')));
-      player.on('setupError', (e) => showError('Setup error: ' + (e.message || 'Could not initialize player')));
-    })();
+      jwplayer("jwplayerDiv").setup(playerSetup);
+    }
   </script>
 </body>
 
