@@ -1,161 +1,305 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <meta name="referrer" content="no-referrer" />
-    <title>Dynamic Shaka Player</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.6/shaka-player.ui.min.js"
-        crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.6/controls.min.css"
-        crossorigin="anonymous" />
-    <style>
-        body {
-            background-color: #222;
-            color: #fff;
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
+  <meta charset="UTF-8">
+  <meta name="referrer" content="no-referrer">
+  <title>Widevine DRM Player — Shaka</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="DASH player with Widevine DRM license URL support, powered by Shaka Player">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡</text></svg>">
 
-        #container {
-            text-align: center;
-        }
+  <!-- Shaka Player -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.6/shaka-player.ui.min.js"
+    crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.6/controls.min.css"
+    crossorigin="anonymous">
 
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        label {
-            margin: 10px 0;
-        }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #111;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-        input {
-            padding: 8px;
-            margin: 5px;
-            width: 300px;
-            border: 1px solid #555;
-            border-radius: 5px;
-            background-color: #333;
-            color: #fff;
-        }
+    /* ── Form card ── */
+    #container {
+      text-align: center;
+      width: 100%;
+      max-width: 500px;
+      padding: 16px;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    #container.hide {
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+    }
 
-        button {
-            padding: 10px;
-            margin-top: 15px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
+    .card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 32px 28px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    }
 
-        button:hover {
-            background-color: #0056b3;
-        }
+    .card h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #f0f0f0;
+      margin-bottom: 4px;
+    }
+    .card .subtitle {
+      font-size: 0.82rem;
+      color: #888;
+      margin-bottom: 20px;
+    }
 
-        /* Overflow menu style */
-        .shaka-overflow-menu {
-            background-color: rgb(35, 35, 35);
-            color: rgb(255, 255, 255);
-        }
+    .tags { display: flex; gap: 6px; justify-content: center; margin-bottom: 22px; }
+    .tag {
+      font-size: 0.68rem; font-weight: 600;
+      padding: 3px 10px; border-radius: 20px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .tag-shaka { background: #2563eb; color: #fff; }
+    .tag-widevine { background: #15803d; color: #fff; }
+    .tag-dash { background: #dc2626; color: #fff; }
 
-        .shaka-settings-menu button:hover {
-            background-color: rgb(45, 45, 45);
-        }
+    form {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+    }
 
-        /* Shaka Player video container */
-        #video-container {
-            width: 100%;
-            height: 100%;
-            display: none;
-        }
-    </style>
+    label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 6px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 11px 14px;
+      margin-bottom: 16px;
+      background: #0d0d0d;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-size: 0.88rem;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+    input[type="text"]::placeholder { color: #555; }
+
+    .btn-load {
+      padding: 13px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      background: #2563eb;
+      color: #fff;
+      transition: background 0.15s;
+      margin-top: 4px;
+    }
+    .btn-load:hover { background: #1d4ed8; }
+    .btn-load:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 16px;
+      font-size: 0.8rem;
+      color: #60a5fa;
+      text-decoration: none;
+    }
+    .back-link:hover { text-decoration: underline; }
+
+    /* ── Error ── */
+    #error {
+      display: none;
+      margin-top: 12px;
+      padding: 10px;
+      background: #dc262615;
+      border: 1px solid #dc262644;
+      border-radius: 6px;
+      color: #f87171;
+      font-size: 0.82rem;
+      text-align: center;
+    }
+
+    /* ── Video container ── */
+    #video-container {
+      display: none;
+      width: 100%;
+      height: 100vh;
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 50;
+    }
+
+    #video-container video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* Shaka UI overrides */
+    .shaka-overflow-menu {
+      background-color: rgb(35, 35, 35) !important;
+      color: rgb(255, 255, 255) !important;
+    }
+    .shaka-settings-menu button:hover {
+      background-color: rgb(45, 45, 45) !important;
+    }
+    .shaka-seek-bar-container .shaka-seek-bar {
+      --shaka-seek-bar-played-color: #e94560;
+    }
+  </style>
 </head>
 
 <body>
-    <div id="container">
-        <form id="userInputForm">
-            <label for="manifestUri">MPD Link:</label>
-            <input type="text" id="manifestUri" name="manifestUri" required>
-            <br>
-            <label for="licenseUrl">License URL:</label>
-            <input type="text" id="licenseUrl" name="licenseUrl" required>
-            <br>
-            <button type="button" onclick="loadVideo()">Load Video</button>
-        </form>
-        <div id="video-container" data-shaka-player-container>
-            <video autoplay data-shaka-player id='video'></video>
-        </div>
+  <!-- ── Form ── -->
+  <div id="container">
+    <div class="card">
+      <h1>Widevine DRM Player</h1>
+      <p class="subtitle">Play DASH streams with a Widevine license server</p>
+
+      <div class="tags">
+        <span class="tag tag-shaka">Shaka Player</span>
+        <span class="tag tag-widevine">Widevine</span>
+        <span class="tag tag-dash">DASH</span>
+      </div>
+
+      <form id="userInputForm" onsubmit="return false;">
+        <label for="manifestUri">MPD Manifest URL <span style="color:#f87171">*</span></label>
+        <input type="text" id="manifestUri" placeholder="https://example.com/content/manifest.mpd" required autofocus>
+
+        <label for="licenseUrl">Widevine License URL <span style="color:#f87171">*</span></label>
+        <input type="text" id="licenseUrl" placeholder="https://license-server.example.com/widevine" required>
+
+        <button type="button" class="btn-load" id="loadBtn" onclick="loadVideo()">
+          &#9654; Load &amp; Play
+        </button>
+
+        <div id="error"></div>
+      </form>
+
+      <a class="back-link" href="index.html">&larr; Back to main player</a>
     </div>
-    <script>
-        async function loadVideo() {
-            const manifestUri = document.getElementById('manifestUri').value;
-            const licenseUrl = document.getElementById('licenseUrl').value;
+  </div>
 
-            const formContainer = document.getElementById('userInputForm');
-            const videoContainer = document.getElementById('video-container');
-            const video = document.getElementById('video');
-            const ui = video['ui'];
-            const controls = ui.getControls();
-            const player = controls.getPlayer();
+  <!-- ── Shaka video container ── -->
+  <div id="video-container" data-shaka-player-container>
+    <video autoplay data-shaka-player id="video"></video>
+  </div>
 
-            const config = {
-                enableKeyboardPlaybackControls: true,
-                'seekBarColors': {
-                    base: 'rgba(255,255,255,.2)',
-                    buffered: 'rgba(255,255,255,.4)',
-                    played: 'rgb(255,0,0)',
-                },
-            };
-            ui.configure(config);
+  <script>
+    'use strict';
 
-            player.configure({
-                drm: {
-                    servers: {
-                        'com.widevine.alpha': licenseUrl
-                    },
-                    clearKeys: {},
-                }
-            });
+    function showError(msg) {
+      const el = document.getElementById('error');
+      el.textContent = msg;
+      el.style.display = 'block';
+      setTimeout(() => (el.style.display = 'none'), 6000);
+    }
 
-            player.addEventListener('error', onPlayerErrorEvent);
-            controls.addEventListener('error', onUIErrorEvent);
+    async function loadVideo() {
+      const manifestUri = document.getElementById('manifestUri').value.trim();
+      const licenseUrl  = document.getElementById('licenseUrl').value.trim();
 
-            try {
-                await player.load(manifestUri);
-                formContainer.style.display = 'none'; // Hide the input form
-                videoContainer.style.display = 'block'; // Show the video container
-                console.log('The video has now been loaded!');
-            } catch (error) {
-                onPlayerError(error);
-            }
+      if (!manifestUri) return showError('MPD manifest URL is required.');
+      if (!licenseUrl)  return showError('Widevine license URL is required.');
+
+      const loadBtn = document.getElementById('loadBtn');
+      loadBtn.disabled = true;
+      loadBtn.textContent = 'Loading…';
+
+      try {
+        // Ensure Shaka is supported
+        if (!shaka.Player.isBrowserSupported()) {
+          throw new Error('Your browser does not support Shaka Player.');
         }
 
-        function onPlayerErrorEvent(errorEvent) {
-            onPlayerError(event.detail);
-        }
+        const video = document.getElementById('video');
+        const ui = video['ui'];
+        const controls = ui.getControls();
+        const player = controls.getPlayer();
 
-        function onPlayerError(error) {
-            console.error('Error code', error.code, 'object', error);
-        }
+        // Configure UI
+        ui.configure({
+          enableKeyboardPlaybackControls: true,
+          seekBarColors: {
+            base: 'rgba(255,255,255,.2)',
+            buffered: 'rgba(255,255,255,.4)',
+            played: 'rgb(233, 69, 96)',
+          },
+        });
 
-        function onUIErrorEvent(errorEvent) {
-            onPlayerError(event.detail);
-        }
+        // Configure DRM
+        player.configure({
+          drm: {
+            servers: {
+              'com.widevine.alpha': licenseUrl,
+            },
+            clearKeys: {},
+          },
+        });
 
-        function initFailed(errorEvent) {
-            console.error('Unable to load the UI library!');
-        }
+        // Error listeners
+        player.addEventListener('error', (e) => onPlayerError(e.detail));
+        controls.addEventListener('error', (e) => onPlayerError(e.detail));
 
-        document.addEventListener('shaka-ui-loaded', initFailed);
-        document.addEventListener('shaka-ui-load-failed', initFailed);
-    </script>
+        // Load manifest
+        await player.load(manifestUri);
+
+        // Switch to video view
+        document.getElementById('container').classList.add('hide');
+        setTimeout(() => {
+          document.getElementById('container').style.display = 'none';
+        }, 350);
+        document.getElementById('video-container').style.display = 'block';
+
+        console.log('Video loaded successfully:', manifestUri);
+
+      } catch (err) {
+        console.error('Load error:', err);
+        showError(err.message || 'Failed to load the video.');
+        loadBtn.disabled = false;
+        loadBtn.textContent = '▶ Load & Play';
+      }
+    }
+
+    function onPlayerError(error) {
+      console.error('Player error — code:', error.code, 'detail:', error);
+      showError(`Playback error (code ${error.code}). Check console for details.`);
+    }
+
+    // Shaka UI events
+    document.addEventListener('shaka-ui-loaded', () => {
+      console.log('Shaka UI loaded successfully');
+    });
+
+    document.addEventListener('shaka-ui-load-failed', () => {
+      console.error('Shaka UI failed to load');
+      showError('Shaka Player UI library failed to load.');
+    });
+  </script>
 </body>
 
 </html>

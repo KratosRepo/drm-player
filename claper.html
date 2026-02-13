@@ -1,72 +1,207 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-  <title>KRAtos</title>
-  <link rel="stylesheet" type="text/css" href="/clapp.css">
-  <script src="//cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
-  <script type="text/javascript" src="//cdn.jsdelivr.net/gh/clappr/clappr-level-selector-plugin@latest/dist/level-selector.min.js"></script>
+  <meta charset="UTF-8">
+  <title>Clappr HLS Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="HLS video player powered by Clappr with quality and audio track selection">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>▶</text></svg>">
+
+  <!-- Clappr + Plugins -->
+  <script src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/clappr/clappr-level-selector-plugin@latest/dist/level-selector.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@clappr/hlsjs-playback@1.2.0/dist/hlsjs-playback.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@c3voc/clappr-audio-track-selector@0.2.4/dist/audio-track-selector.min.js"></script>
+
   <style>
-    body, html {
-      height: 100%;
-      margin: 0;
-      padding: 0;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body { height: 100%; width: 100%; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
     }
-    #player {
-      height: 100%;
+
+    /* ── Input bar ── */
+    .input-bar {
+      display: flex;
+      gap: 8px;
       width: 100%;
+      max-width: 720px;
+      padding: 12px 16px;
+      background: #161616;
+      border-bottom: 1px solid #2a2a2a;
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      transition: transform 0.3s ease;
     }
-    #playButton {
-      display: block;
+    .input-bar.hidden { transform: translate(-50%, -100%); }
+
+    .input-bar input[type="text"] {
+      flex: 1;
+      padding: 10px 14px;
+      background: #0d0d0d;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.88rem;
+      min-width: 0;
+    }
+    .input-bar input[type="text"]:focus {
+      outline: none;
+      border-color: #e94560;
+    }
+    .input-bar input[type="text"]::placeholder { color: #555; }
+
+    .btn-play {
+      padding: 10px 24px;
+      background: #e94560;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .btn-play:hover { background: #c0392b; }
+    .btn-play:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Player area ── */
+    #player {
+      width: 100%;
+      height: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+    }
+
+    /* ── Toast error ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1a1a1a;
+      color: #ff6b6b;
+      border: 1px solid #ff6b6b33;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      z-index: 200;
+      opacity: 0;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
     }
   </style>
 </head>
+
 <body>
-  <input type="text" id="videoUrl" placeholder="Enter video URL">
-  <button id="playButton" onclick="playVideo()">Play</button>
+  <!-- URL input bar -->
+  <div class="input-bar" id="inputBar">
+    <input type="text" id="videoUrl" placeholder="Enter HLS stream URL (.m3u8)" autofocus>
+    <button class="btn-play" id="playBtn" onclick="playVideo()">&#9654; Play</button>
+  </div>
+
+  <!-- Clappr player container -->
   <div id="player"></div>
+
+  <!-- Toast for errors -->
+  <div class="toast" id="toast"></div>
+
   <script>
-    var playClicked = false;
+    'use strict';
+
+    let playerInstance = null;
+    let isPlaying = false;
+
+    function showToast(msg, duration = 4000) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), duration);
+    }
 
     function playVideo() {
-      if (playClicked) return;
+      if (isPlaying) return;
 
-      var videoUrl = document.getElementById("videoUrl").value;
-      if (!videoUrl) {
-        alert("Please enter a valid video URL");
+      const url = document.getElementById('videoUrl').value.trim();
+      if (!url) {
+        showToast('Please enter a valid HLS stream URL');
         return;
       }
 
-      var player = new Clappr.Player({
-        source: videoUrl,
-        plugins: [HlsjsPlayback, LevelSelector, AudioTrackSelector],
-        width: '100%',
-        height: '100%',
-        autoPlay: true,
-        mimeType: "application/x-mpegURL",
-        mediacontrol: { seekbar: "#ff0000", buttons: "#eee" },
-        parentId: "#player",
-        hlsUseNextLevel: false,
-        hlsMinimumDvrSize: 60,
-        hlsRecoverAttempts: 16,
-        hlsPlayback: {
-          preload: true,
-          customListeners: [],
-        },
-        playback: {
-          extrapolatedWindowNumSegments: 2,
-          triggerFatalErrorOnResourceDenied: false,
-          hlsjsConfig: {
-            // hls.js specific options
-          },
-        },
-      });
+      // Destroy previous instance
+      if (playerInstance) {
+        playerInstance.destroy();
+        playerInstance = null;
+      }
 
-      // Hide the play button once the video starts playing
-      document.getElementById("playButton").style.display = "none";
-      playClicked = true;
+      try {
+        playerInstance = new Clappr.Player({
+          source: url,
+          plugins: [HlsjsPlayback, LevelSelector, AudioTrackSelector],
+          width: '100%',
+          height: '100%',
+          autoPlay: true,
+          mimeType: 'application/x-mpegURL',
+          parentId: '#player',
+          mediacontrol: {
+            seekbar: '#e94560',
+            buttons: '#eee',
+          },
+          hlsUseNextLevel: false,
+          hlsMinimumDvrSize: 60,
+          hlsRecoverAttempts: 16,
+          hlsPlayback: {
+            preload: true,
+            customListeners: [],
+          },
+          playback: {
+            extrapolatedWindowNumSegments: 2,
+            triggerFatalErrorOnResourceDenied: false,
+            hlsjsConfig: {},
+          },
+          events: {
+            onError: (e) => {
+              console.error('Clappr error:', e);
+              showToast('Playback error — check the URL or try another stream.');
+            },
+          },
+        });
+
+        // Hide input bar after starting
+        document.getElementById('inputBar').classList.add('hidden');
+        isPlaying = true;
+      } catch (err) {
+        console.error('Failed to initialize player:', err);
+        showToast('Failed to initialize the player.');
+      }
     }
+
+    // Allow Enter key to trigger play
+    document.getElementById('videoUrl').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        playVideo();
+      }
+    });
   </script>
 </body>
+
 </html>

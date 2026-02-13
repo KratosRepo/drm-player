@@ -3,45 +3,129 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>m3u8</title>
+  <title>M3U8 Quick Embed</title>
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="//content.jwplatform.com/libraries/SAHhwvZq.js"></script>
+  <meta name="description" content="Quick embed player for M3U8 HLS streams">
+  <script src="https://content.jwplatform.com/libraries/SAHhwvZq.js"></script>
   <style>
-    body {
-      margin: 0px
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+    .jwplayer { position: absolute !important; }
+    .jwplayer.jw-flag-aspect-mode { min-height: 100%; max-height: 100%; }
+
+    /* ── Loading ── */
+    #loader {
+      position: fixed; inset: 0; background: #000;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 12px; z-index: 10;
+      transition: opacity 0.3s;
+    }
+    #loader.hide { opacity: 0; pointer-events: none; }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid #222;
+      border-top-color: #8957e5;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-text {
+      color: #666; font-family: system-ui, sans-serif;
+      font-size: 0.8rem;
     }
 
-    .jwplayer {
-      position: absolute !important
+    /* ── Error ── */
+    #error {
+      display: none; position: fixed; inset: 0; background: #000;
+      color: #e74c3c; font-family: system-ui, sans-serif;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 20px; font-size: 0.95rem;
     }
-
-    .jwplayer.jw-flag-aspect-mode {
-      min-height: 100%;
-      max-height: 100%
-    }
+    #error.visible { display: flex; }
   </style>
 </head>
 
 <body>
+  <div id="loader">
+    <div class="spinner"></div>
+    <div class="loader-text">Loading stream…</div>
+  </div>
   <div id="jwplayerDiv"></div>
-  <script type="text/javascript">
-      // Set JWPlayer key
+  <div id="error"></div>
 
-      // Function to get URL parameter
-      function getURLParameter(name) {
-          const urlParams = new URLSearchParams(window.location.search);
-          return urlParams.get(name);
+  <script>
+    'use strict';
+
+    /**
+     * EMB — Minimal M3U8 embed player.
+     *
+     * URL Parameter:
+     *   video — (required) M3U8 stream URL
+     *
+     * Example:
+     *   EMB.html?video=https://example.com/live/index.m3u8
+     */
+
+    const videoUrl = new URLSearchParams(location.search).get('video') || '';
+
+    function showError(msg) {
+      const el = document.getElementById('error');
+      el.textContent = msg;
+      el.classList.add('visible');
+      document.getElementById('loader').classList.add('hide');
+    }
+
+    function hideLoader() {
+      const loader = document.getElementById('loader');
+      loader.classList.add('hide');
+      setTimeout(() => (loader.style.display = 'none'), 300);
+    }
+
+    if (!videoUrl) {
+      showError('No video URL provided. Use ?video=<your-m3u8-link>');
+    } else {
+      initPlayer();
+    }
+
+    async function initPlayer() {
+      // Wait for JWPlayer library
+      try {
+        await new Promise((resolve, reject) => {
+          const t0 = Date.now();
+          (function poll() {
+            if (typeof jwplayer === 'function') return resolve();
+            if (Date.now() - t0 > 12000) return reject();
+            setTimeout(poll, 100);
+          })();
+        });
+      } catch {
+        return showError('Player library failed to load.');
       }
 
-      // Get M3U8 link from URL parameter
-      const m3u8Link = getURLParameter('video');
+      hideLoader();
 
-      // Setup JWPlayer
-      jwplayer("jwplayerDiv").setup({
-          file: m3u8Link || "DEFAULT_M3U8_LINK_IF_NOT_PROVIDED",
-          autostart: true,
-          stretching: "",
-          width: "100%"
+      const player = jwplayer('jwplayerDiv').setup({
+        file: videoUrl,
+        autostart: true,
+        stretching: 'uniform',
+        width: '100%',
+        height: '100%',
+        type: 'hls',
       });
+
+      player.on('error', (e) => {
+        console.error('Playback error:', e);
+        showError('Playback error — check the stream URL.');
+      });
+
+      player.on('setupError', (e) => {
+        console.error('Setup error:', e);
+        showError('Could not initialize the player.');
+      });
+    }
   </script>
+</body>
+
+</html>

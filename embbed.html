@@ -3,84 +3,154 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>livestream</title>
+  <title>DRM Embed Player</title>
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="//content.jwplatform.com/libraries/SAHhwvZq.js"></script>
+  <meta name="description" content="Embeddable DRM player for DASH and HLS streams with ClearKey support">
+  <script src="https://content.jwplatform.com/libraries/SAHhwvZq.js"></script>
   <style>
-    body {
-      margin: 0px
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+    .jwplayer { position: absolute !important; }
+    .jwplayer.jw-flag-aspect-mode { min-height: 100%; max-height: 100%; }
 
-    .jwplayer {
-      position: absolute !important
+    /* ── Error overlay ── */
+    #error-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #000;
+      color: #e74c3c;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
     }
+    #error-overlay.visible { display: flex; }
 
-    .jwplayer.jw-flag-aspect-mode {
-      min-height: 100%;
-      max-height: 100%
+    /* ── Loading spinner ── */
+    #loader {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      transition: opacity 0.3s;
     }
+    #loader.hide { opacity: 0; pointer-events: none; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid #333;
+      border-top-color: #e94560;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 
 <body>
+  <div id="loader"><div class="spinner"></div></div>
   <div id="jwplayerDiv"></div>
-  <script type="text/javascript">
-    // Function to get URL parameters
-    function getParameterByName(name, url) {
-      if (!url) url = window.location.href;
-      name = name.replace(/[\[\]]/g, "\\$&");
-      var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-        results = regex.exec(url);
-      if (!results) return null;
-      if (!results[2]) return '';
-      return decodeURIComponent(results[2].replace(/\+/g, " "));
+  <div id="error-overlay"></div>
+
+  <script>
+    'use strict';
+
+    /**
+     * Embed Player — designed to be loaded inside an <iframe>.
+     *
+     * URL Parameters:
+     *   emmbed-url | embed-url  — (required) stream manifest URL (.mpd or .m3u8)
+     *   kid                     — (optional) ClearKey Key ID
+     *   key                     — (optional) ClearKey Key
+     *
+     * Example:
+     *   embbed.html?emmbed-url=https://example.com/stream.mpd&kid=abc&key=def
+     */
+
+    const params = new URLSearchParams(location.search);
+    const fileUrl = params.get('emmbed-url') || params.get('embed-url') || '';
+    const kid     = params.get('kid') || '';
+    const key     = params.get('key') || '';
+
+    function showError(msg) {
+      const el = document.getElementById('error-overlay');
+      el.textContent = msg;
+      el.classList.add('visible');
+      document.getElementById('loader').classList.add('hide');
     }
 
-    // Get parameters from the URL
-    var fileUrl = getParameterByName('emmbed-url');
-    var kid = getParameterByName('kid');
-    var key = getParameterByName('key');
-    
-    // Determine stream type
-    var isMpd = fileUrl.endsWith('.mpd');
-    var isM3U8 = fileUrl.endsWith('.m3u8');
+    function hideLoader() {
+      document.getElementById('loader').classList.add('hide');
+      setTimeout(() => {
+        document.getElementById('loader').style.display = 'none';
+      }, 300);
+    }
 
-    // Set up JWPlayer
-    var playerSetup = {
-      file: fileUrl,
-      position: 'bottom',
-      autostart: true,
-      stretching: "",
-      width: "100%"
-    };
-
-    if (isMpd) {
-      // Set up DRM for DASH with keys
-      playerSetup.type = 'dash';
-      playerSetup.drm = {
-        clearkey: {
-          keyId: kid,
-          key: key
-        }
-      };
-    } else if (isM3U8) {
-      // Set up DRM for HLS with keys
-      playerSetup.type = 'hls';
-      if (kid && key) {
-        playerSetup.drm = {
-          clearkey: {
-            keyId: kid,
-            key: key
-          }
-        };
-      }
+    /* ── Validate ── */
+    if (!fileUrl) {
+      showError('No stream URL provided. Use ?emmbed-url=<your-stream-url>');
     } else {
-      // Default to HLS without keys
-      playerSetup.type = 'hls';
+      initPlayer();
     }
 
-    jwplayer("jwplayerDiv").setup(playerSetup);
+    async function initPlayer() {
+      // Wait for JWPlayer
+      try {
+        await new Promise((resolve, reject) => {
+          const t0 = Date.now();
+          (function poll() {
+            if (typeof jwplayer === 'function') return resolve();
+            if (Date.now() - t0 > 12000) return reject();
+            setTimeout(poll, 100);
+          })();
+        });
+      } catch {
+        return showError('Player library failed to load.');
+      }
+
+      hideLoader();
+
+      // Determine type
+      const lower = fileUrl.toLowerCase();
+      const isMpd  = lower.endsWith('.mpd');
+
+      const config = {
+        file: fileUrl,
+        autostart: true,
+        stretching: 'uniform',
+        width: '100%',
+        height: '100%',
+        type: isMpd ? 'dash' : 'hls',
+      };
+
+      // Attach DRM if keys provided
+      if (isMpd && kid && key) {
+        config.drm = { clearkey: { keyId: kid, key: key } };
+      } else if (!isMpd && kid && key) {
+        config.type = 'hls';
+        config.drm = { clearkey: { keyId: kid, key: key } };
+      }
+
+      const player = jwplayer('jwplayerDiv').setup(config);
+
+      // Error handling
+      player.on('error', (e) => {
+        console.error('JWPlayer error:', e);
+        showError('Playback error: ' + (e.message || 'Unknown error'));
+      });
+
+      player.on('setupError', (e) => {
+        console.error('Setup error:', e);
+        showError('Setup error: ' + (e.message || 'Could not initialize player'));
+      });
+    }
   </script>
 </body>
 
