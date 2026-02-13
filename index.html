@@ -28,15 +28,10 @@
       position: fixed;
       top: 0;
       left: 0;
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
       z-index: 10;
       background: #000;
-    }
-    #jwplayerDiv .jwplayer {
-      position: static !important;
-      width: 100vw !important;
-      height: 100vh !important;
     }
 
     /* ── Form card ── */
@@ -300,6 +295,8 @@
       }
 
       hideForm();
+      // Wait for browser to layout the visible div before JWPlayer measures it
+      await new Promise(r => requestAnimationFrame(r));
       const player = jwplayer('jwplayerDiv').setup(buildConfig(manifest, keyId, key));
       player.on('error', (e) => showError('Playback error: ' + (e.message || 'Unknown error')));
       player.on('setupError', (e) => showError('Setup error: ' + (e.message || 'Could not initialize player')));
@@ -328,6 +325,7 @@
       }
 
       hideForm();
+      await new Promise(r => requestAnimationFrame(r));
       const player = jwplayer('jwplayerDiv').setup(buildConfig(fileUrl, kid, key));
       player.on('error', (e) => showError('Playback error: ' + (e.message || 'Unknown error')));
       player.on('setupError', (e) => showError('Setup error: ' + (e.message || 'Could not initialize player')));
