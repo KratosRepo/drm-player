@@ -28,13 +28,16 @@
       position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
+      width: 100vw;
+      height: 100vh;
       z-index: 10;
       background: #000;
     }
-    .jwplayer { position: absolute !important; width: 100% !important; height: 100% !important; }
-    .jwplayer.jw-flag-aspect-mode { min-height: 100%; max-height: 100%; }
+    #jwplayerDiv .jwplayer {
+      position: static !important;
+      width: 100vw !important;
+      height: 100vh !important;
+    }
 
     /* ── Form card ── */
     #videoForm {
@@ -270,7 +273,7 @@
         file: manifest,
         autostart: true,
         width: '100%',
-        aspectratio: '16:9',
+        height: '100%',
         stretching: 'uniform',
         type: getStreamType(manifest),
       };
